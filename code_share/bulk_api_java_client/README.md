@@ -5,7 +5,10 @@ This code solves the problem of retrieving very large volumn of data from Salesf
 
 "large volumn" means > 100,000,000 records
 
-"small amount of time" means < 3 hours
+"small amount of time" means < 3 hours - if you use `connection.query`
+"small amount of time" means < 30 mins - if you use `connection.queryAll`
+
+*queryAll* is faster since it does not filter on `isDeleted = true`
 
 How to use it
 =============
