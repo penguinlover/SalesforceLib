@@ -17,10 +17,8 @@ td.after, td.before { color: #888; }
 td.but { border-bottom: 1px solid #CCC; }
 td.cap { border-top:    1px solid #CCC; }
 td.wal { border-right:  1px solid #CCC; }
-td.bug {
-    color: #333 !important;
-    background-color: #FFF !important;
-}
+td.mon { width: 60px; color: #333 !important; }
+td.bug { color: #CCC; background-color: #FFF !important; }
 td.selected {
     color: #dd4b39;
     background-color: #f1f1f1;

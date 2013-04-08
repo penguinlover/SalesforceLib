@@ -5,7 +5,7 @@ var firstPick = null,
     lastIdx = null;
 
 function enableAllEvents(){
-    $('#datepicker .dates td:not(.mon)').on('click', function(){
+    $('#datepicker .dates td:not(.bug)').on('click', function(){
         if(status == 'idel'){
             firstPick = $(this);
             firstIdx = firstPick.parent()[0].sectionRowIndex;
@@ -20,19 +20,29 @@ function enableAllEvents(){
         }
     });
     $('td#up').on('click', function(){
-        $('#test tbody tr').remove();
-        $('#dates').val('');
-        renderPrev();
+        if(dates[0][0] != CurrentYear || dates[0][1] != CurrentMonth){
+            $('#dates').val('');
+            $('#test tbody').fadeOut(400, function(){
+                $(this).remove();
+                $('#test').append('<tbody>');
+                renderPrev();    
+            });
+        }
     });
     $('td#down').on('click', function(){
         $('#dates').val('');
-        $('#test tbody tr').remove();
-        renderNext();
+        $('#test tbody').fadeOut(400, function(){
+            $(this).remove();
+            $('#test').append('<tbody>');
+            renderNext();
+        });
     });
+    // disable selecting past dates
+    $('td[data=]')
 }
 
 function enableSelect(){
-    $('#datepicker .dates td:not(.mon)').on('mouseenter', function(){
+    $('#datepicker .dates td:not(.bug)').on('mouseenter', function(){
         lastPick = $(this);
         console.log(lastPick.data('date'));
         // eager rendering
@@ -91,6 +101,7 @@ function fillGap(firstDate, lastDate, firstRow, lastRow){
         });
     }
 }
+
 //////////////////////
 // core functions
 
@@ -176,7 +187,7 @@ function renderView(data){
             month = data[j][1],
             year = data[j][0],
             numOfDays = data[j][2];
-        //console.log('weekStartOn:' + weekStartOn + '. numOfDays:' + numOfDays);
+
         // render the first row
         if(!$nextRow){
             $nextRow = $('<tr>');
@@ -185,26 +196,33 @@ function renderView(data){
                 _year = year;
             if(--_month < 0) { _year--; _month = 11; }
             daysInPrevMonth = (isLeapYear(_year) && _month == 1) ? 29 : DaysInMonth[_month];
-            //console.log('daysInPrevMonth:' + daysInPrevMonth);
             for(var i=0; i < weekStartOn; i++){
-                var node = $('<td class="before but err">' + daysInPrevMonth-- + '</td>');
+                var node = $('<td class="before but">' + daysInPrevMonth-- + '</td>');
                 if(i == weekStartOn - 1){ node.addClass('wal'); }
+                if(isPastDate(_year, _month, daysInPrevMonth)){ 
+                    console.log('year:' + _year + ' month:' + _month + ' day:' + daysInPrevMonth);
+                    node.addClass('bug'); 
+                }
                 node.data('date', {y: _year, m: _month, d: daysInPrevMonth})
                 $nextRow.append(node);
             }
-            //console.log('firstRow:first' + $nextRow.html());
         }
+        
         // render the rest of first row
         var d = 1;
         for(var i=weekStartOn; i <= 7; i++, d++){
             var node = $('<td class="cap">' + d + '</td>');
             if(i == 7){ 
-                node.addClass('mon bug').text(Months[data[j][1]]); 
+                node.addClass('mon bug').text(Months[data[j][1]] + ' ' +year); 
+            } else {
+                if(isPastDate(year, month, d)){ 
+                    console.log('year:' + year + ' month:' + month + ' day:' + d);
+                    node.addClass('bug'); 
+                }
+                node.data('date', {y: year, m: month, d: d});    
             }
-            node.data('date', {y: year, m: month, d: d});
             $nextRow.append(node);
         }
-        //console.log('firstRow.all:' + $nextRow.html());
         result.push($nextRow);
         
         // render the rest rows
@@ -212,11 +230,6 @@ function renderView(data){
         var base = --d;
         for(d; d <= numOfDays; d++){
             //console.log('base:' + base + 'd:' + d + 'numOfDays:' + numOfDays);
-            if(d > base && (d - base) % 7 == 0){
-                result.push($nextRow);
-                //console.log($nextRow.html());
-                $nextRow = $('<tr>');
-            }
             var node = $('<td>' + d + '</td>');
             if(j < data.length - 1){            
                 if(numOfDays - d < (numOfDays - (7 - weekStartOn)) % 7){
@@ -224,15 +237,32 @@ function renderView(data){
                     if(numOfDays == d){ node.addClass('wal'); }
                 }
             }
+            if(isPastDate(year, month, d)){ 
+                console.log('year:' + year + ' month:' + month + ' day:' + d);
+                node.addClass('bug'); 
+            }
             node.data('date', {y: year, m: month, d: d});
             $nextRow.append(node);
+            
+            // test if current row wraps up
+            if((d - base + 1) % 7 == 0){
+                result.push($nextRow);
+                $nextRow = $('<tr>');
+            }
         }
         result.push($nextRow);
     }
     for(var i=0; i< result.length; i++){
-        $('#test tbody').append(result[i]);
+        $('#test tbody').hide().append(result[i]);
     }
+    $('#test tbody').fadeIn();
     enableAllEvents();
+}
+
+function isPastDate(year, month, day){
+    var today = new Date();
+    var another = new Date(year, month, day);
+    return today > another;
 }
 
 initialize();
